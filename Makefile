@@ -17,6 +17,7 @@ env-cleanup:
 	if [ "$$answer" = "y" ] || [ "$$answer" = "Y" ]; then \
 		project=$$(docker compose config --format json | sed -n 's/^[[:space:]]*"name": "\([^"]*\)",*$$/\1/p' | head -n 1); \
 		docker compose rm --stop --force todoapp-postgres; \
+		docker compose down port-forwarder; \
 		volume=$$(docker volume ls --quiet \
 			--filter "label=com.docker.compose.project=$$project" \
 			--filter "label=com.docker.compose.volume=postgres-data"); \
@@ -58,3 +59,9 @@ migrate-action:
 		-path /migrations \
 		-database postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@todoapp-postgres:5432/$(POSTGRES_DB)?sslmode=disable \
 		$(action)
+
+todoapp-run:
+	@export LOGGER_FOLDER=${PROJECT_ROOT}/out/logs && \
+	export POSTGRES_HOST=localhost && \
+	go mod tidy && \
+	CGO_ENABLED=0 go run cmd/todoapp/main.go
