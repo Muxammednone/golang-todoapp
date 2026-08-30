@@ -1,7 +1,7 @@
 include .env
 export
 
-.PHONY: env-up env-down env-cleanup
+.PHONY: env-up env-down env-cleanup logs-cleanup
 
 export PROJECT_ROOT = $(shell pwd)
 
@@ -29,6 +29,16 @@ env-cleanup:
 	else \
 		echo "Очистка отменена."; \
 	fi
+logs-cleanup:
+	@printf "Удалить все файлы логов? [y/N] "; \
+	read answer; \
+	if [ "$$answer" = "y" ] || [ "$$answer" = "Y" ]; then \
+		rm -f out/logs/*.log; \
+		echo "Логи удалены."; \
+	else \
+		echo "Очистка отменена."; \
+	fi
+
 env-port-forward:
 	@docker compose up -d port-forwarder
 env-port-close:

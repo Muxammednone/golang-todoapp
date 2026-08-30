@@ -8,7 +8,7 @@ import (
 	core_errors "github.com/Muxammednone/golang-todoapp/internal/core/errors"
 )
 
-func GetIntQueryParams(r *http.Request, key string) (*int, error) {
+func GetIntQueryParam(r *http.Request, key string) (*int, error) {
 	param := r.URL.Query().Get(key)
 	if param == "" {
 		return nil, nil
