@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Focus — Todo App</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg:#f4f1e9; --surface:#fff; --soft:#ebe7de; --text:#20211e;
+      --muted:#74766f; --border:#dedbd2; --accent:#ff5d38; --green:#26865e;
+      --danger:#d94b43; --shadow:0 16px 45px rgb(39 38 32 / 8%);
+    }
+    [data-theme="dark"] {
+      color-scheme: dark;
+      --bg:#151613; --surface:#20211d; --soft:#2a2c27; --text:#f4f2eb;
+      --muted:#a5a69e; --border:#373932; --accent:#ff704d; --green:#43ad7e;
+      --danger:#ff716a; --shadow:0 18px 48px rgb(0 0 0 / 25%);
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 Inter,system-ui,sans-serif; transition:background .2s,color .2s; }
+    button,input,select,textarea { font:inherit; }
+    button { cursor:pointer; }
+    .app { width:min(1180px,100%); margin:auto; padding:24px; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-bottom:28px; }
+    .brand { display:flex; align-items:center; gap:11px; font-size:22px; font-weight:850; }
+    .logo { display:grid; place-items:center; width:40px; height:40px; border-radius:13px; background:var(--text); color:var(--bg); }
+    .header-actions { display:flex; align-items:center; gap:10px; }
+    .api { color:var(--muted); font-size:11px; }
+    .theme { width:42px; height:42px; padding:0; border:1px solid var(--border); border-radius:13px; background:var(--surface); color:var(--text); font-size:18px; }
+    .nav { display:flex; width:max-content; gap:5px; margin-bottom:34px; padding:5px; border-radius:14px; background:var(--soft); }
+    .nav button { padding:9px 18px; border:0; border-radius:10px; background:transparent; color:var(--muted); }
+    .nav button.active { background:var(--surface); color:var(--text); box-shadow:0 3px 12px rgb(0 0 0 / 8%); }
+    .page { display:none; }
+    .page.active { display:block; animation:enter .22s ease; }
+    @keyframes enter { from { opacity:0; transform:translateY(5px) } }
+    .heading { display:flex; align-items:end; justify-content:space-between; gap:20px; margin-bottom:24px; }
+    .eyebrow { color:var(--muted); font-size:11px; font-weight:750; letter-spacing:.14em; text-transform:uppercase; }
+    h1 { margin:5px 0 7px; font-size:clamp(38px,6vw,65px); line-height:1; letter-spacing:-.06em; }
+    .subtitle { margin:0; color:var(--muted); }
+    .card,.task,.user-card { border:1px solid var(--border); background:var(--surface); box-shadow:var(--shadow); }
+    .card { padding:19px; border-radius:20px; }
+    .tasks-layout { display:grid; grid-template-columns:270px 1fr; gap:24px; }
+    .side { display:grid; gap:14px; align-content:start; }
+    .field { width:100%; padding:11px 13px; border:1px solid var(--border); border-radius:12px; outline:0; background:var(--bg); color:var(--text); }
+    .field:focus { border-color:var(--accent); }
+    .stack { display:grid; gap:9px; margin-top:11px; }
+    .button { border:0; border-radius:11px; padding:11px 15px; font-weight:750; }
+    .primary { background:var(--accent); color:#fff; }
+    .secondary { background:var(--text); color:var(--bg); }
+    .stats { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:14px; }
+    .stat strong { display:block; font-size:25px; letter-spacing:-.04em; }
+    .stat span { color:var(--muted); font-size:11px; }
+    .composer { display:grid; grid-template-columns:1fr auto; gap:10px; }
+    .composer textarea { grid-column:1/-1; min-height:70px; resize:vertical; }
+    .toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:22px 2px 12px; }
+    .filters { display:flex; gap:4px; padding:4px; border-radius:12px; background:var(--soft); }
+    .filters button { border:0; border-radius:9px; padding:8px 13px; background:transparent; color:var(--muted); }
+    .filters button.active { background:var(--surface); color:var(--text); }
+    .count { color:var(--muted); font-size:12px; }
+    .task-list { display:grid; gap:10px; }
+    .task { display:grid; grid-template-columns:auto 1fr auto; gap:14px; align-items:start; padding:16px; border-radius:16px; }
+    .check { width:24px; height:24px; padding:0; border:2px solid var(--border); border-radius:8px; background:transparent; color:transparent; }
+    .done .check { border-color:var(--green); background:var(--green); color:#fff; }
+    .task h3 { margin:0 0 4px; }
+    .task p { margin:0; color:var(--muted); white-space:pre-wrap; }
+    .meta { margin-top:8px; color:var(--muted); font-size:11px; }
+    .done h3 { color:var(--muted); text-decoration:line-through; }
+    .icon-button { padding:2px 6px; border:0; background:transparent; color:var(--muted); font-size:20px; }
+    .icon-button:hover { color:var(--danger); }
+    .actions { display:flex; align-items:center; gap:5px; }
+    .edit:hover { color:var(--accent); }
+    .users-layout { display:grid; grid-template-columns:320px 1fr; gap:24px; }
+    .user-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .user-card { padding:18px; border-radius:18px; }
+    .user-top { display:flex; justify-content:space-between; gap:10px; }
+    .avatar { display:grid; place-items:center; width:42px; height:42px; margin-bottom:15px; border-radius:14px; background:var(--soft); color:var(--accent); font-weight:850; }
+    .user-card h3 { margin:0 0 4px; }
+    .phone { color:var(--muted); font-size:13px; }
+    .version { margin-top:14px; color:var(--muted); font-size:11px; }
+    .empty { padding:45px; border:1px dashed var(--border); border-radius:18px; color:var(--muted); text-align:center; }
+    .toast { position:fixed; right:22px; bottom:22px; z-index:5; max-width:360px; padding:13px 17px; border-radius:12px; background:var(--text); color:var(--bg); opacity:0; transform:translateY(20px); pointer-events:none; transition:.2s; }
+    .toast.show { opacity:1; transform:none; }
+    .toast.error { background:var(--danger); color:#fff; }
+    dialog { width:min(440px,calc(100% - 32px)); padding:0; border:1px solid var(--border); border-radius:20px; background:var(--surface); color:var(--text); box-shadow:0 30px 90px rgb(0 0 0 / 35%); }
+    dialog::backdrop { background:rgb(0 0 0 / 48%); backdrop-filter:blur(3px); }
+    .dialog-body { padding:22px; }
+    .dialog-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+    .dialog-head h2 { margin:0; }
+    .dialog-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:16px; }
+    .cancel { background:var(--soft); color:var(--text); }
+    @media(max-width:780px) { .app{padding:17px}.tasks-layout,.users-layout{grid-template-columns:1fr}.side{grid-template-columns:1fr 1fr}.api{display:none}.heading{align-items:start;flex-direction:column}.user-grid{grid-template-columns:1fr 1fr} }
+    @media(max-width:520px) { .side,.user-grid{grid-template-columns:1fr}.composer{grid-template-columns:1fr}.composer .button{width:100%}.nav{width:100%}.nav button{flex:1}.toolbar{align-items:flex-end;flex-direction:column}.filters{width:100%}.filters button{flex:1} }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand"><div class="logo">✓</div>Focus</div>
+      <div class="header-actions"><span id="api-label" class="api"></span><button id="theme" class="theme" title="Сменить тему">☾</button></div>
+    </header>
+    <nav class="nav"><button class="active" data-page="tasks">Задачи</button><button data-page="users">Пользователи</button></nav>
+
+    <section id="page-tasks" class="page active">
+      <div class="heading"><div><div class="eyebrow">Моё пространство</div><h1>Делай важное.</h1><p class="subtitle">Спокойный список задач без лишнего шума.</p></div></div>
+      <div class="tasks-layout">
+        <aside class="side">
+          <div class="card"><div class="eyebrow">Автор задач</div><select id="task-user" class="field"></select></div>
+          <div class="card"><div class="eyebrow">Статистика</div><div class="stats"><div class="stat"><strong id="created">—</strong><span>создано</span></div><div class="stat"><strong id="completed">—</strong><span>готово</span></div><div class="stat"><strong id="rate">—</strong><span>прогресс</span></div><div class="stat"><strong id="average">—</strong><span>ср. время</span></div></div></div>
+        </aside>
+        <main>
+          <form id="task-form" class="card composer"><input id="title" class="field" maxlength="100" placeholder="Что нужно сделать?" required><button class="button primary">Добавить</button><textarea id="description" class="field" maxlength="1000" placeholder="Описание — необязательно"></textarea></form>
+          <div class="toolbar"><div class="filters"><button class="active" data-filter="all">Все</button><button data-filter="active">В работе</button><button data-filter="done">Готово</button></div><span id="task-count" class="count"></span></div>
+          <div id="task-list" class="task-list"></div>
+        </main>
+      </div>
+    </section>
+
+    <section id="page-users" class="page">
+      <div class="heading"><div><div class="eyebrow">Команда</div><h1>Пользователи.</h1><p class="subtitle">Создавайте авторов и управляйте участниками.</p></div><span id="user-count" class="count"></span></div>
+      <div class="users-layout">
+        <form id="user-form" class="card stack"><div class="eyebrow">Новый пользователь</div><input id="name" class="field" minlength="3" maxlength="100" placeholder="Полное имя" required><input id="phone" class="field" type="tel" placeholder="Телефон +..."><button class="button secondary">Создать пользователя</button></form>
+        <div id="user-grid" class="user-grid"></div>
+      </div>
+    </section>
+  </div>
+  <div id="toast" class="toast"></div>
+  <dialog id="task-dialog"><form id="edit-task-form" class="dialog-body"><div class="dialog-head"><h2>Изменить задачу</h2><button type="button" class="icon-button" data-close="task-dialog">×</button></div><div class="stack"><input id="edit-task-title" class="field" maxlength="100" required><textarea id="edit-task-description" class="field" maxlength="1000" rows="5" placeholder="Описание"></textarea></div><div class="dialog-actions"><button type="button" class="button cancel" data-close="task-dialog">Отмена</button><button class="button primary">Сохранить</button></div></form></dialog>
+  <dialog id="user-dialog"><form id="edit-user-form" class="dialog-body"><div class="dialog-head"><h2>Изменить пользователя</h2><button type="button" class="icon-button" data-close="user-dialog">×</button></div><div class="stack"><input id="edit-user-name" class="field" minlength="3" maxlength="100" required><input id="edit-user-phone" class="field" type="tel" placeholder="Телефон +..."></div><div class="dialog-actions"><button type="button" class="button cancel" data-close="user-dialog">Отмена</button><button class="button primary">Сохранить</button></div></form></dialog>
+  <script>
+    const apiHost = location.hostname || "172.27.254.112";
+    const API = localStorage.todoApi || `http://${apiHost}:5050/api/v1`;
+    const state = { users:[], tasks:[], userId:0, filter:"all" };
+    const $ = selector => document.querySelector(selector);
+    const escapeHTML = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[c]);
+    $("#api-label").textContent = API;
+
+    function notify(text, error=false) { const el=$("#toast"); el.textContent=text; el.className=`toast show${error?" error":""}`; clearTimeout(notify.timer); notify.timer=setTimeout(()=>el.className="toast",3000); }
+    async function request(path, options={}) { const headers=options.body?{"Content-Type":"application/json"}:{}; const response=await fetch(API+path,{...options,headers}); if(!response.ok){const body=await response.json().catch(()=>({}));throw new Error(body.message||body.error||`HTTP ${response.status}`)} return response.status===204?null:response.json(); }
+
+    function applyTheme(theme) { document.documentElement.dataset.theme=theme; localStorage.todoTheme=theme; $("#theme").textContent=theme==="dark"?"☀":"☾"; }
+    applyTheme(localStorage.todoTheme || (matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"));
+    $("#theme").onclick=()=>applyTheme(document.documentElement.dataset.theme==="dark"?"light":"dark");
+    $(".nav").onclick=event=>{const page=event.target.dataset.page;if(!page)return;document.querySelectorAll(".nav button").forEach(x=>x.classList.toggle("active",x===event.target));document.querySelectorAll(".page").forEach(x=>x.classList.toggle("active",x.id===`page-${page}`));};
+
+    async function loadUsers() { state.users=await request("/users?limit=100&offset=0"); if(!state.users.some(x=>x.id===state.userId))state.userId=state.users[0]?.id||0; renderUsers(); renderUserSelect(); await loadTasks(); }
+    function renderUserSelect() { $("#task-user").innerHTML=state.users.length?state.users.map(x=>`<option value="${x.id}">${escapeHTML(x.full_name)}</option>`).join(""):'<option value="">Нет пользователей</option>'; $("#task-user").value=state.userId||""; }
+    function renderUsers() { $("#user-count").textContent=`${state.users.length} пользователей`; $("#user-grid").innerHTML=state.users.length?state.users.map(user=>`<article class="user-card"><div class="user-top"><div class="avatar">${escapeHTML(user.full_name.trim()[0]?.toUpperCase()||"?")}</div><div class="actions"><button class="icon-button edit" data-edit-user="${user.id}" title="Изменить">✎</button><button class="icon-button" data-delete-user="${user.id}" title="Удалить">×</button></div></div><h3>${escapeHTML(user.full_name)}</h3><div class="phone">${escapeHTML(user.phone_number||"Телефон не указан")}</div><div class="version">ID ${user.id} · версия ${user.version}</div></article>`).join(""):'<div class="empty">Пользователей пока нет</div>'; }
+    async function loadTasks() { if(!state.userId){state.tasks=[];renderTasks();resetStats();return} const [tasks,stats]=await Promise.all([request(`/tasks?user_id=${state.userId}&limit=100&offset=0`),request(`/statistics?user_id=${state.userId}`)]);state.tasks=tasks;$("#created").textContent=stats.tasks_created;$("#completed").textContent=stats.tasks_completed;$("#rate").textContent=stats.tasks_completed_rate==null?"—":`${Math.round(stats.tasks_completed_rate)}%`;$("#average").textContent=stats.tasks_average_completion_time||"—";renderTasks(); }
+    function resetStats(){["created","completed","rate","average"].forEach(id=>$("#"+id).textContent="—");}
+    function renderTasks(){const tasks=state.tasks.filter(x=>state.filter==="all"||(state.filter==="done"?x.completed:!x.completed));$("#task-count").textContent=`${tasks.length} задач`;$("#task-list").innerHTML=tasks.length?tasks.map(task=>`<article class="task ${task.completed?"done":""}"><button class="check" data-toggle="${task.id}">✓</button><div><h3>${escapeHTML(task.title)}</h3>${task.description?`<p>${escapeHTML(task.description)}</p>`:""}<div class="meta">${new Date(task.created_at).toLocaleString("ru-RU")}</div></div><div class="actions"><button class="icon-button edit" data-edit-task="${task.id}" title="Изменить">✎</button><button class="icon-button" data-delete-task="${task.id}" title="Удалить">×</button></div></article>`).join(""):'<div class="empty">Здесь пока нет задач</div>';}
+
+    $("#task-user").onchange=event=>{state.userId=+event.target.value;loadTasks().catch(e=>notify(e.message,true));};
+    $("#task-form").onsubmit=async event=>{event.preventDefault();if(!state.userId)return notify("Сначала создайте пользователя",true);try{await request("/tasks",{method:"POST",body:JSON.stringify({title:$("#title").value.trim(),description:$("#description").value.trim()||null,author_user_id:state.userId})});event.target.reset();await loadTasks();notify("Задача создана")}catch(e){notify(e.message,true)}};
+    $("#user-form").onsubmit=async event=>{event.preventDefault();try{const user=await request("/users",{method:"POST",body:JSON.stringify({full_name:$("#name").value.trim(),phone_number:$("#phone").value.trim()||null})});state.userId=user.id;event.target.reset();await loadUsers();notify("Пользователь создан")}catch(e){notify(e.message,true)}};
+    $(".filters").onclick=event=>{if(!event.target.dataset.filter)return;event.preventDefault();state.filter=event.target.dataset.filter;document.querySelectorAll(".filters button").forEach(x=>x.classList.toggle("active",x===event.target));renderTasks();};
+    $("#task-list").onclick=async event=>{const id=+(event.target.dataset.toggle||event.target.dataset.deleteTask||event.target.dataset.editTask),task=state.tasks.find(x=>x.id===id);if(!task)return;if(event.target.dataset.editTask){$("#edit-task-form").dataset.id=id;$("#edit-task-title").value=task.title;$("#edit-task-description").value=task.description||"";$("#task-dialog").showModal();return}try{if(event.target.dataset.toggle)await request(`/tasks/${id}`,{method:"PATCH",body:JSON.stringify({completed:!task.completed})});else if(confirm("Удалить задачу?"))await request(`/tasks/${id}`,{method:"DELETE"});else return;await loadTasks()}catch(e){notify(e.message,true)}};
+    $("#user-grid").onclick=async event=>{const id=+(event.target.dataset.deleteUser||event.target.dataset.editUser),user=state.users.find(x=>x.id===id);if(!user)return;if(event.target.dataset.editUser){$("#edit-user-form").dataset.id=id;$("#edit-user-name").value=user.full_name;$("#edit-user-phone").value=user.phone_number||"";$("#user-dialog").showModal();return}if(!confirm("Удалить пользователя? Его задачи могут помешать удалению."))return;try{await request(`/users/${id}`,{method:"DELETE"});await loadUsers();notify("Пользователь удалён")}catch(e){notify(e.message,true)}};
+    $("#edit-task-form").onsubmit=async event=>{event.preventDefault();const id=+event.target.dataset.id;try{await request(`/tasks/${id}`,{method:"PATCH",body:JSON.stringify({title:$("#edit-task-title").value.trim(),description:$("#edit-task-description").value.trim()||null})});$("#task-dialog").close();await loadTasks();notify("Задача изменена")}catch(e){notify(e.message,true)}};
+    $("#edit-user-form").onsubmit=async event=>{event.preventDefault();const id=+event.target.dataset.id;try{await request(`/users/${id}`,{method:"PATCH",body:JSON.stringify({full_name:$("#edit-user-name").value.trim(),phone_number:$("#edit-user-phone").value.trim()||null})});$("#user-dialog").close();await loadUsers();notify("Пользователь изменён")}catch(e){notify(e.message,true)}};
+    document.addEventListener("click",event=>{const id=event.target.dataset.close;if(id)$("#"+id).close()});
+    loadUsers().catch(e=>{notify(`Не удалось подключиться к API: ${e.message}`,true);renderUsers();renderTasks();});
+  </script>
+</body>
+</html>
