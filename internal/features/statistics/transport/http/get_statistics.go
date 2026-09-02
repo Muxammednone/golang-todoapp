@@ -12,12 +12,24 @@ import (
 )
 
 type GetStatisticsResponse struct {
-	TasksCreated               int      `json:"tasks_created"`
-	TasksCompleted             int      `json:"tasks_completed"`
-	TasksCompletedRate         *float64 `json:"tasks_completed_rate"`
-	TasksAverageCompletionTime *string  `json:"tasks_average_completion_time"`
+	TasksCreated               int      `json:"tasks_created" example:"50"`
+	TasksCompleted             int      `json:"tasks_completed" example:"10"`
+	TasksCompletedRate         *float64 `json:"tasks_completed_rate" example:"20"`
+	TasksAverageCompletionTime *string  `json:"tasks_average_completion_time" example:"1m30s"`
 }
 
+// GetStatistics godoc
+// @Summary Получение статистики
+// @Description Просмотр статистики по задачам с опциональной фильтрацией по user_id и временному промежутку
+// @Tags statistics
+// @Produce json
+// @Param user_id query int false "Фильтрация статичтики по конкретному пользователю"
+// @Param from query string false "Начало промежутка рассмотрения статистики (включительно), формат: YYYY-MM-DD"
+// @Param to query string false "Конец промежутка рассмотрения статистики (не включительно), формат: YYYY-MM-DD"
+// @Success 200 {object} GetStatisticsResponse "Успешно полученная статистика"
+// @Failure 400 {object} core_http_response.ErrorResponse "Bad Request"
+// @Failure 500 {object} core_http_response.ErrorResponse "Internal server error"
+// @Router /statistics [get]
 func getDTOFromDomain(statistics domain.Statistics) GetStatisticsResponse {
 	var avgTime *string
 	if statistics.TasksAverageCompletionTime != nil {
