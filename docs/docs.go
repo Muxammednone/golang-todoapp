@@ -15,9 +15,272 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/auth/login": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Login and receive a JWT",
+                "parameters": [
+                    {
+                        "description": "Request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth_transport_http.LoginRequestDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/auth_transport_http.LoginResponseDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "schema": {
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "SSO unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
+                        }
+                    },
+                    "504": {
+                        "description": "SSO timeout",
+                        "schema": {
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Get SSO account ID from JWT; no profile required",
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/auth_transport_http.MeResponseDTO"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or expired JWT",
+                        "schema": {
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/register": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Register an SSO account",
+                "parameters": [
+                    {
+                        "description": "Request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth_transport_http.RegisterRequestDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/auth_transport_http.RegisterResponseDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Email already registered",
+                        "schema": {
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "SSO unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
+                        }
+                    },
+                    "504": {
+                        "description": "SSO timeout",
+                        "schema": {
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Get your TodoApp profile",
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/users_transport_http.UserDTOResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "JWT required",
+                        "schema": {
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Create a profile first",
+                        "schema": {
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Create your TodoApp profile",
+                "parameters": [
+                    {
+                        "description": "Request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/users_transport_http.CreateUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/users_transport_http.UserDTOResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid profile",
+                        "schema": {
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "JWT required",
+                        "schema": {
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Profile already exists",
+                        "schema": {
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/statistics": {
             "get": {
-                "description": "Просмотр статистики по задачам с опциональной фильтрацией по user_id и временному промежутку",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Просмотр статистики своих задач за выбранный период",
                 "produces": [
                     "application/json"
                 ],
@@ -26,12 +289,6 @@ const docTemplate = `{
                 ],
                 "summary": "Получение статистики",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Фильтрация статичтики по конкретному пользователю",
-                        "name": "user_id",
-                        "in": "query"
-                    },
                     {
                         "type": "string",
                         "description": "Начало промежутка рассмотрения статистики (включительно), формат: YYYY-MM-DD",
@@ -49,19 +306,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Успешно полученная статистика",
                         "schema": {
-                            "$ref": "#/definitions/internal_features_statistics_transport_http.GetStatisticsResponse"
+                            "$ref": "#/definitions/statistics_transport_http.GetStatisticsResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or expired JWT",
+                        "schema": {
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Create a profile via POST /me first",
+                        "schema": {
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
                         }
                     }
                 }
@@ -69,7 +338,12 @@ const docTemplate = `{
         },
         "/tasks": {
             "get": {
-                "description": "Просмотр списка задач с опциональной пагинацией и/или фильтрацией по ID автора задачи",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Просмотр своих задач с опциональной пагинацией",
                 "produces": [
                     "application/json"
                 ],
@@ -80,19 +354,13 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Фильтрация задач по ID автора",
-                        "name": "user_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Размер страницы с пользователями",
+                        "description": "Размер страницы с задачами",
                         "name": "limit",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "Смещение страницы с пользователями",
+                        "description": "Смещение страницы с задачами",
                         "name": "offset",
                         "in": "query"
                     }
@@ -103,25 +371,42 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/internal_features_tasks_transport_http.TaskDTOResponse"
+                                "$ref": "#/definitions/tasks_transport_http.TaskDTOResponse"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or expired JWT",
+                        "schema": {
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Create a profile via POST /me first",
+                        "schema": {
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
                         }
                     }
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Создать новую задачу в системе",
                 "consumes": [
                     "application/json"
@@ -140,7 +425,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_features_tasks_transport_http.CreateTaskRequest"
+                            "$ref": "#/definitions/tasks_transport_http.CreateTaskRequest"
                         }
                     }
                 ],
@@ -148,25 +433,31 @@ const docTemplate = `{
                     "201": {
                         "description": "Успешно созданная задача",
                         "schema": {
-                            "$ref": "#/definitions/internal_features_tasks_transport_http.CreateTaskResponse"
+                            "$ref": "#/definitions/tasks_transport_http.CreateTaskResponse"
                         }
                     },
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or expired JWT",
+                        "schema": {
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "Author not found",
+                        "description": "Create a profile via POST /me first",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
                         }
                     }
                 }
@@ -174,6 +465,11 @@ const docTemplate = `{
         },
         "/tasks/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Получение конкретной задачи по её ID",
                 "produces": [
                     "application/json"
@@ -195,30 +491,41 @@ const docTemplate = `{
                     "200": {
                         "description": "Задача успешно найдена",
                         "schema": {
-                            "$ref": "#/definitions/internal_features_tasks_transport_http.GetTaskResponse"
+                            "$ref": "#/definitions/tasks_transport_http.GetTaskResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or expired JWT",
+                        "schema": {
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "Task not found",
+                        "description": "Profile missing, task absent or owned by another account",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
                         }
                     }
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Удаление существующей задачи в системе по ее ID",
                 "tags": [
                     "tasks"
@@ -240,25 +547,36 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or expired JWT",
+                        "schema": {
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "Task not found",
+                        "description": "Profile missing, task absent or owned by another account",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
                         }
                     }
                 }
             },
             "patch": {
-                "description": "Обновляет информацию об уже существующей в системе задаче\n### Логика обновления полей (Three-state logic):\n1. **Поле не передано**: ` + "`" + `description` + "`" + ` игнорируется, значение в БД не меняется\n2. **Явно передвно значение: ` + "`" + `\"description\": \"some description\"` + "`" + ` - устанавливает новое описание в БД\n3. **Передан null: ` + "`" + `\"description\": null` + "`" + ` - очищает поле в БД (set to NULL)\nОграничения: ` + "`" + `title` + "`" + ` и ` + "`" + `completed` + "`" + ` не можгут быть выставлены как NULL",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Обновляет информацию об уже существующей в системе задаче\n### Логика обновления полей (Three-state logic):\n1. **Поле не передано**: ` + "`" + `description` + "`" + ` игнорируется, значение в БД не меняется\n2. **Явно передано значение: ` + "`" + `\"description\": \"some description\"` + "`" + ` - устанавливает новое описание в БД\n3. **Передан null: ` + "`" + `\"description\": null` + "`" + ` - очищает поле в БД (set to NULL)\nОграничения: ` + "`" + `title` + "`" + ` и ` + "`" + `completed` + "`" + ` не могут быть выставлены как NULL",
                 "consumes": [
                     "application/json"
                 ],
@@ -283,7 +601,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_features_tasks_transport_http.PatchTaskRequest"
+                            "$ref": "#/definitions/tasks_transport_http.PatchTaskRequest"
                         }
                     }
                 ],
@@ -291,273 +609,37 @@ const docTemplate = `{
                     "200": {
                         "description": "Успешно измененная задача",
                         "schema": {
-                            "$ref": "#/definitions/internal_features_tasks_transport_http.PatchTaskResponse"
+                            "$ref": "#/definitions/tasks_transport_http.PatchTaskResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or expired JWT",
+                        "schema": {
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "Task not found",
+                        "description": "Profile missing, task absent or owned by another account",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/users": {
-            "get": {
-                "description": "Просмотр списка пользоватеелй с опциональной пагинацией",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Список пользователей",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Размер страницы с пользователями",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Смещение страницы с пользователями",
-                        "name": "offset",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Успешное получение списка пользователей",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/internal_features_users_transport_http.UserDTOResponse"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Создать нового пользователя в системе",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Создать пользователя",
-                "parameters": [
-                    {
-                        "description": "CreateUser тело запроса",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/internal_features_users_transport_http.CreateUserRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Успешно созданный пользователь",
-                        "schema": {
-                            "$ref": "#/definitions/internal_features_users_transport_http.CreateUserResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/users/{id}": {
-            "get": {
-                "description": "Получение конкретного пользователя по его ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Получение пользователя",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID получаемого пользователя",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Пользователь успешно найден",
-                        "schema": {
-                            "$ref": "#/definitions/internal_features_users_transport_http.GetUserResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "User not found",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Удаление существующего в системе пользователя по его ID",
-                "tags": [
-                    "users"
-                ],
-                "summary": "Удаление пользователя",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID удаляемого пользователя",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Успешное удаление пользоваетля"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "User not found",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "patch": {
-                "description": "Изменение информации об уже существующем в системе пользователе\n### Логика обновления полей (Three-state logic):\n1. **Поле не передано**: ` + "`" + `phone_number` + "`" + ` игнорируется, значение в БД не меняется\n2. **Явно передвно значение: ` + "`" + `\"phone_number\": \"+79873268732\"` + "`" + ` - устанавливает новый номер в БД\n3. **Передан null: ` + "`" + `\"phone_number\": null` + "`" + ` - очищает поле в БД (set to NULL)\nОграничения: ` + "`" + `full_name` + "`" + ` не может быть выставлен как NULL",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Изменение пользователя",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID изменяемого пользователя",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "PatchUser тело запроса",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/internal_features_users_transport_http.PatchUserRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Успешно измененный пользователь",
-                        "schema": {
-                            "$ref": "#/definitions/internal_features_users_transport_http.PatchUserResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "User not found",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "Conflict",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse"
+                            "$ref": "#/definitions/core_http_response.ErrorResponse"
                         }
                     }
                 }
@@ -565,7 +647,61 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse": {
+        "auth_transport_http.LoginRequestDTO": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth_transport_http.LoginResponseDTO": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth_transport_http.MeResponseDTO": {
+            "type": "object",
+            "properties": {
+                "sso_user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "auth_transport_http.RegisterRequestDTO": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth_transport_http.RegisterResponseDTO": {
+            "type": "object",
+            "properties": {
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "core_http_response.ErrorResponse": {
             "type": "object",
             "properties": {
                 "error": {
@@ -578,7 +714,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_features_statistics_transport_http.GetStatisticsResponse": {
+        "statistics_transport_http.GetStatisticsResponse": {
             "type": "object",
             "properties": {
                 "tasks_average_completion_time": {
@@ -599,17 +735,12 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_features_tasks_transport_http.CreateTaskRequest": {
+        "tasks_transport_http.CreateTaskRequest": {
             "type": "object",
             "required": [
-                "author_user_id",
                 "title"
             ],
             "properties": {
-                "author_user_id": {
-                    "type": "integer",
-                    "example": 2
-                },
                 "description": {
                     "type": "string",
                     "maxLength": 1000,
@@ -624,7 +755,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_features_tasks_transport_http.CreateTaskResponse": {
+        "tasks_transport_http.CreateTaskResponse": {
             "type": "object",
             "properties": {
                 "author_user_id": {
@@ -661,7 +792,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_features_tasks_transport_http.GetTaskResponse": {
+        "tasks_transport_http.GetTaskResponse": {
             "type": "object",
             "properties": {
                 "author_user_id": {
@@ -698,7 +829,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_features_tasks_transport_http.PatchTaskRequest": {
+        "tasks_transport_http.PatchTaskRequest": {
             "type": "object",
             "properties": {
                 "completed": {
@@ -714,7 +845,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_features_tasks_transport_http.PatchTaskResponse": {
+        "tasks_transport_http.PatchTaskResponse": {
             "type": "object",
             "properties": {
                 "author_user_id": {
@@ -751,7 +882,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_features_tasks_transport_http.TaskDTOResponse": {
+        "tasks_transport_http.TaskDTOResponse": {
             "type": "object",
             "properties": {
                 "author_user_id": {
@@ -788,7 +919,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_features_users_transport_http.CreateUserRequest": {
+        "users_transport_http.CreateUserRequest": {
             "type": "object",
             "required": [
                 "full_name"
@@ -808,83 +939,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_features_users_transport_http.CreateUserResponse": {
-            "type": "object",
-            "properties": {
-                "full_name": {
-                    "type": "string",
-                    "example": "Ivan Ivanov"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 10
-                },
-                "phone_number": {
-                    "type": "string",
-                    "example": "+79876548967"
-                },
-                "version": {
-                    "type": "integer",
-                    "example": 3
-                }
-            }
-        },
-        "internal_features_users_transport_http.GetUserResponse": {
-            "type": "object",
-            "properties": {
-                "full_name": {
-                    "type": "string",
-                    "example": "Ivan Ivanov"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 10
-                },
-                "phone_number": {
-                    "type": "string",
-                    "example": "+79876548967"
-                },
-                "version": {
-                    "type": "integer",
-                    "example": 3
-                }
-            }
-        },
-        "internal_features_users_transport_http.PatchUserRequest": {
-            "type": "object",
-            "properties": {
-                "full_name": {
-                    "type": "string",
-                    "example": "Maxim Maximovich"
-                },
-                "phone_number": {
-                    "type": "string",
-                    "example": "+79876543256"
-                }
-            }
-        },
-        "internal_features_users_transport_http.PatchUserResponse": {
-            "type": "object",
-            "properties": {
-                "full_name": {
-                    "type": "string",
-                    "example": "Ivan Ivanov"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 10
-                },
-                "phone_number": {
-                    "type": "string",
-                    "example": "+79876548967"
-                },
-                "version": {
-                    "type": "integer",
-                    "example": 3
-                }
-            }
-        },
-        "internal_features_users_transport_http.UserDTOResponse": {
+        "users_transport_http.UserDTOResponse": {
             "type": "object",
             "properties": {
                 "full_name": {
@@ -905,13 +960,21 @@ const docTemplate = `{
                 }
             }
         }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Enter Bearer \u003caccess_token\u003e returned by POST /auth/login.",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "172.27.254.112:5050",
+	Host:             "",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "Golang Todo API",

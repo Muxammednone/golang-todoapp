@@ -11,7 +11,7 @@ import (
 
 func (s *StatisticsService) GetStatistics(
 	ctx context.Context,
-	userID *int,
+	userID int,
 	from *time.Time,
 	to *time.Time,
 ) (domain.Statistics, error) {

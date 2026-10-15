@@ -1,6 +1,41 @@
 basePath: /api/v1
 definitions:
-  github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse:
+  auth_transport_http.LoginRequestDTO:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  auth_transport_http.LoginResponseDTO:
+    properties:
+      access_token:
+        type: string
+    type: object
+  auth_transport_http.MeResponseDTO:
+    properties:
+      sso_user_id:
+        type: integer
+    type: object
+  auth_transport_http.RegisterRequestDTO:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  auth_transport_http.RegisterResponseDTO:
+    properties:
+      user_id:
+        type: integer
+    type: object
+  core_http_response.ErrorResponse:
     properties:
       error:
         example: full error text
@@ -9,7 +44,7 @@ definitions:
         example: short human-readable example
         type: string
     type: object
-  internal_features_statistics_transport_http.GetStatisticsResponse:
+  statistics_transport_http.GetStatisticsResponse:
     properties:
       tasks_average_completion_time:
         example: 1m30s
@@ -24,11 +59,8 @@ definitions:
         example: 50
         type: integer
     type: object
-  internal_features_tasks_transport_http.CreateTaskRequest:
+  tasks_transport_http.CreateTaskRequest:
     properties:
-      author_user_id:
-        example: 2
-        type: integer
       description:
         example: Сделать до четверга домашнее задание по математике
         maxLength: 1000
@@ -40,10 +72,9 @@ definitions:
         minLength: 1
         type: string
     required:
-    - author_user_id
     - title
     type: object
-  internal_features_tasks_transport_http.CreateTaskResponse:
+  tasks_transport_http.CreateTaskResponse:
     properties:
       author_user_id:
         example: 5
@@ -70,7 +101,7 @@ definitions:
         example: 3
         type: integer
     type: object
-  internal_features_tasks_transport_http.GetTaskResponse:
+  tasks_transport_http.GetTaskResponse:
     properties:
       author_user_id:
         example: 5
@@ -97,7 +128,7 @@ definitions:
         example: 3
         type: integer
     type: object
-  internal_features_tasks_transport_http.PatchTaskRequest:
+  tasks_transport_http.PatchTaskRequest:
     properties:
       completed:
         type: boolean
@@ -108,7 +139,7 @@ definitions:
         example: Погулять с собакой
         type: string
     type: object
-  internal_features_tasks_transport_http.PatchTaskResponse:
+  tasks_transport_http.PatchTaskResponse:
     properties:
       author_user_id:
         example: 5
@@ -135,7 +166,7 @@ definitions:
         example: 3
         type: integer
     type: object
-  internal_features_tasks_transport_http.TaskDTOResponse:
+  tasks_transport_http.TaskDTOResponse:
     properties:
       author_user_id:
         example: 5
@@ -162,7 +193,7 @@ definitions:
         example: 3
         type: integer
     type: object
-  internal_features_users_transport_http.CreateUserRequest:
+  users_transport_http.CreateUserRequest:
     properties:
       full_name:
         example: Ivan Ivanov
@@ -177,7 +208,7 @@ definitions:
     required:
     - full_name
     type: object
-  internal_features_users_transport_http.CreateUserResponse:
+  users_transport_http.UserDTOResponse:
     properties:
       full_name:
         example: Ivan Ivanov
@@ -192,76 +223,180 @@ definitions:
         example: 3
         type: integer
     type: object
-  internal_features_users_transport_http.GetUserResponse:
-    properties:
-      full_name:
-        example: Ivan Ivanov
-        type: string
-      id:
-        example: 10
-        type: integer
-      phone_number:
-        example: "+79876548967"
-        type: string
-      version:
-        example: 3
-        type: integer
-    type: object
-  internal_features_users_transport_http.PatchUserRequest:
-    properties:
-      full_name:
-        example: Maxim Maximovich
-        type: string
-      phone_number:
-        example: "+79876543256"
-        type: string
-    type: object
-  internal_features_users_transport_http.PatchUserResponse:
-    properties:
-      full_name:
-        example: Ivan Ivanov
-        type: string
-      id:
-        example: 10
-        type: integer
-      phone_number:
-        example: "+79876548967"
-        type: string
-      version:
-        example: 3
-        type: integer
-    type: object
-  internal_features_users_transport_http.UserDTOResponse:
-    properties:
-      full_name:
-        example: Ivan Ivanov
-        type: string
-      id:
-        example: 10
-        type: integer
-      phone_number:
-        example: "+79876548967"
-        type: string
-      version:
-        example: 3
-        type: integer
-    type: object
-host: 172.27.254.112:5050
 info:
   contact: {}
   description: Todo Application REST-API schema
   title: Golang Todo API
   version: "1.0"
 paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth_transport_http.LoginRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: '#/definitions/auth_transport_http.LoginResponseDTO'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+        "401":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+        "503":
+          description: SSO unavailable
+          schema:
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+        "504":
+          description: SSO timeout
+          schema:
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+      summary: Login and receive a JWT
+      tags:
+      - auth
+  /auth/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: '#/definitions/auth_transport_http.MeResponseDTO'
+        "401":
+          description: Invalid or expired JWT
+          schema:
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get SSO account ID from JWT; no profile required
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth_transport_http.RegisterRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Success
+          schema:
+            $ref: '#/definitions/auth_transport_http.RegisterResponseDTO'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+        "409":
+          description: Email already registered
+          schema:
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+        "503":
+          description: SSO unavailable
+          schema:
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+        "504":
+          description: SSO timeout
+          schema:
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+      summary: Register an SSO account
+      tags:
+      - auth
+  /me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: '#/definitions/users_transport_http.UserDTOResponse'
+        "401":
+          description: JWT required
+          schema:
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+        "404":
+          description: Create a profile first
+          schema:
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get your TodoApp profile
+      tags:
+      - profile
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/users_transport_http.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Success
+          schema:
+            $ref: '#/definitions/users_transport_http.UserDTOResponse'
+        "400":
+          description: Invalid profile
+          schema:
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+        "401":
+          description: JWT required
+          schema:
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+        "409":
+          description: Profile already exists
+          schema:
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create your TodoApp profile
+      tags:
+      - profile
   /statistics:
     get:
-      description: Просмотр статистики по задачам с опциональной фильтрацией по user_id
-        и временному промежутку
+      description: Просмотр статистики своих задач за выбранный период
       parameters:
-      - description: Фильтрация статичтики по конкретному пользователю
-        in: query
-        name: user_id
-        type: integer
       - description: 'Начало промежутка рассмотрения статистики (включительно), формат:
           YYYY-MM-DD'
         in: query
@@ -278,32 +413,37 @@ paths:
         "200":
           description: Успешно полученная статистика
           schema:
-            $ref: '#/definitions/internal_features_statistics_transport_http.GetStatisticsResponse'
+            $ref: '#/definitions/statistics_transport_http.GetStatisticsResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+        "401":
+          description: Invalid or expired JWT
+          schema:
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+        "404":
+          description: Create a profile via POST /me first
+          schema:
+            $ref: '#/definitions/core_http_response.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Получение статистики
       tags:
       - statistics
   /tasks:
     get:
-      description: Просмотр списка задач с опциональной пагинацией и/или фильтрацией
-        по ID автора задачи
+      description: Просмотр своих задач с опциональной пагинацией
       parameters:
-      - description: Фильтрация задач по ID автора
-        in: query
-        name: user_id
-        type: integer
-      - description: Размер страницы с пользователями
+      - description: Размер страницы с задачами
         in: query
         name: limit
         type: integer
-      - description: Смещение страницы с пользователями
+      - description: Смещение страницы с задачами
         in: query
         name: offset
         type: integer
@@ -314,16 +454,26 @@ paths:
           description: Успешное получение списка задач
           schema:
             items:
-              $ref: '#/definitions/internal_features_tasks_transport_http.TaskDTOResponse'
+              $ref: '#/definitions/tasks_transport_http.TaskDTOResponse'
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+        "401":
+          description: Invalid or expired JWT
+          schema:
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+        "404":
+          description: Create a profile via POST /me first
+          schema:
+            $ref: '#/definitions/core_http_response.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Список задач
       tags:
       - tasks
@@ -337,26 +487,32 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_features_tasks_transport_http.CreateTaskRequest'
+          $ref: '#/definitions/tasks_transport_http.CreateTaskRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Успешно созданная задача
           schema:
-            $ref: '#/definitions/internal_features_tasks_transport_http.CreateTaskResponse'
+            $ref: '#/definitions/tasks_transport_http.CreateTaskResponse'
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
-        "404":
-          description: Author not found
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+        "401":
+          description: Invalid or expired JWT
           schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+        "404":
+          description: Create a profile via POST /me first
+          schema:
+            $ref: '#/definitions/core_http_response.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Создать задачу
       tags:
       - tasks
@@ -375,15 +531,21 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
-        "404":
-          description: Task not found
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+        "401":
+          description: Invalid or expired JWT
           schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+        "404":
+          description: Profile missing, task absent or owned by another account
+          schema:
+            $ref: '#/definitions/core_http_response.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Удаление задачи
       tags:
       - tasks
@@ -401,19 +563,25 @@ paths:
         "200":
           description: Задача успешно найдена
           schema:
-            $ref: '#/definitions/internal_features_tasks_transport_http.GetTaskResponse'
+            $ref: '#/definitions/tasks_transport_http.GetTaskResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
-        "404":
-          description: Task not found
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+        "401":
+          description: Invalid or expired JWT
           schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+        "404":
+          description: Profile missing, task absent or owned by another account
+          schema:
+            $ref: '#/definitions/core_http_response.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Получение задачи
       tags:
       - tasks
@@ -424,9 +592,9 @@ paths:
         Обновляет информацию об уже существующей в системе задаче
         ### Логика обновления полей (Three-state logic):
         1. **Поле не передано**: `description` игнорируется, значение в БД не меняется
-        2. **Явно передвно значение: `"description": "some description"` - устанавливает новое описание в БД
+        2. **Явно передано значение: `"description": "some description"` - устанавливает новое описание в БД
         3. **Передан null: `"description": null` - очищает поле в БД (set to NULL)
-        Ограничения: `title` и `completed` не можгут быть выставлены как NULL
+        Ограничения: `title` и `completed` не могут быть выставлены как NULL
       parameters:
       - description: ID изменяемой задачи
         in: path
@@ -438,197 +606,43 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_features_tasks_transport_http.PatchTaskRequest'
+          $ref: '#/definitions/tasks_transport_http.PatchTaskRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Успешно измененная задача
           schema:
-            $ref: '#/definitions/internal_features_tasks_transport_http.PatchTaskResponse'
+            $ref: '#/definitions/tasks_transport_http.PatchTaskResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
-        "404":
-          description: Task not found
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+        "401":
+          description: Invalid or expired JWT
           schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+        "404":
+          description: Profile missing, task absent or owned by another account
+          schema:
+            $ref: '#/definitions/core_http_response.ErrorResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
+            $ref: '#/definitions/core_http_response.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
+            $ref: '#/definitions/core_http_response.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Обновить задачу
       tags:
       - tasks
-  /users:
-    get:
-      description: Просмотр списка пользоватеелй с опциональной пагинацией
-      parameters:
-      - description: Размер страницы с пользователями
-        in: query
-        name: limit
-        type: integer
-      - description: Смещение страницы с пользователями
-        in: query
-        name: offset
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Успешное получение списка пользователей
-          schema:
-            items:
-              $ref: '#/definitions/internal_features_users_transport_http.UserDTOResponse'
-            type: array
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
-      summary: Список пользователей
-      tags:
-      - users
-    post:
-      consumes:
-      - application/json
-      description: Создать нового пользователя в системе
-      parameters:
-      - description: CreateUser тело запроса
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/internal_features_users_transport_http.CreateUserRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Успешно созданный пользователь
-          schema:
-            $ref: '#/definitions/internal_features_users_transport_http.CreateUserResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
-      summary: Создать пользователя
-      tags:
-      - users
-  /users/{id}:
-    delete:
-      description: Удаление существующего в системе пользователя по его ID
-      parameters:
-      - description: ID удаляемого пользователя
-        in: path
-        name: id
-        required: true
-        type: integer
-      responses:
-        "204":
-          description: Успешное удаление пользоваетля
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
-        "404":
-          description: User not found
-          schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
-      summary: Удаление пользователя
-      tags:
-      - users
-    get:
-      description: Получение конкретного пользователя по его ID
-      parameters:
-      - description: ID получаемого пользователя
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Пользователь успешно найден
-          schema:
-            $ref: '#/definitions/internal_features_users_transport_http.GetUserResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
-        "404":
-          description: User not found
-          schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
-      summary: Получение пользователя
-      tags:
-      - users
-    patch:
-      consumes:
-      - application/json
-      description: |-
-        Изменение информации об уже существующем в системе пользователе
-        ### Логика обновления полей (Three-state logic):
-        1. **Поле не передано**: `phone_number` игнорируется, значение в БД не меняется
-        2. **Явно передвно значение: `"phone_number": "+79873268732"` - устанавливает новый номер в БД
-        3. **Передан null: `"phone_number": null` - очищает поле в БД (set to NULL)
-        Ограничения: `full_name` не может быть выставлен как NULL
-      parameters:
-      - description: ID изменяемого пользователя
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: PatchUser тело запроса
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/internal_features_users_transport_http.PatchUserRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Успешно измененный пользователь
-          schema:
-            $ref: '#/definitions/internal_features_users_transport_http.PatchUserResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
-        "404":
-          description: User not found
-          schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
-        "409":
-          description: Conflict
-          schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/github_com_Muxammednone_golang-todoapp_internal_core_transport_http_response.ErrorResponse'
-      summary: Изменение пользователя
-      tags:
-      - users
+securityDefinitions:
+  BearerAuth:
+    description: Enter Bearer <access_token> returned by POST /auth/login.
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

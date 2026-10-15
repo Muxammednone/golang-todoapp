@@ -14,7 +14,7 @@ type StatisticsService struct {
 type StatisticsRepository interface {
 	GetTasks(
 		ctx context.Context,
-		userID *int,
+		userID int,
 		from *time.Time,
 		to *time.Time,
 	) ([]domain.Task, error)

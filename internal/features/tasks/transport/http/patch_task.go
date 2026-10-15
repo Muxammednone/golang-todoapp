@@ -5,7 +5,9 @@ import (
 	"net/http"
 
 	"github.com/Muxammednone/golang-todoapp/internal/core/domain"
+	core_errors "github.com/Muxammednone/golang-todoapp/internal/core/errors"
 	core_logger "github.com/Muxammednone/golang-todoapp/internal/core/logger"
+	core_http_middleware "github.com/Muxammednone/golang-todoapp/internal/core/transport/http/middleware"
 	core_http_request "github.com/Muxammednone/golang-todoapp/internal/core/transport/http/request"
 	core_http_response "github.com/Muxammednone/golang-todoapp/internal/core/transport/http/response"
 	core_http_types "github.com/Muxammednone/golang-todoapp/internal/core/transport/http/types"
@@ -54,9 +56,9 @@ type PatchTaskResponse TaskDTOResponse
 // @Description Обновляет информацию об уже существующей в системе задаче
 // @Description ### Логика обновления полей (Three-state logic):
 // @Description 1. **Поле не передано**: `description` игнорируется, значение в БД не меняется
-// @Description 2. **Явно передвно значение: `"description": "some description"` - устанавливает новое описание в БД
+// @Description 2. **Явно передано значение: `"description": "some description"` - устанавливает новое описание в БД
 // @Description 3. **Передан null: `"description": null` - очищает поле в БД (set to NULL)
-// @Description Ограничения: `title` и `completed` не можгут быть выставлены как NULL
+// @Description Ограничения: `title` и `completed` не могут быть выставлены как NULL
 // @Tags tasks
 // @Accept json
 // @Produce json
@@ -64,14 +66,21 @@ type PatchTaskResponse TaskDTOResponse
 // @Param request body PatchTaskRequest true "PatchTask тело запроса"
 // @Success 200 {object} PatchTaskResponse "Успешно измененная задача"
 // @Failure 400 {object} core_http_response.ErrorResponse "Bad Request"
-// @Failure 404 {object} core_http_response.ErrorResponse "Task not found"
+// @Failure 404 {object} core_http_response.ErrorResponse "Profile missing, task absent or owned by another account"
 // @Failure 409 {object} core_http_response.ErrorResponse "Conflict"
 // @Failure 500 {object} core_http_response.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Failure 401 {object} core_http_response.ErrorResponse "Invalid or expired JWT"
 // @Router /tasks/{id} [patch]
 func (h *TasksHTTPHandler) PatchTask(rw http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := core_logger.FromContext(ctx)
 	responseHandler := core_http_response.NewHTTPResponseHandler(logger, rw)
+	userID, ok := core_http_middleware.ProfileUserIDFromContext(ctx)
+	if !ok {
+		responseHandler.ErrorResponse(core_errors.ErrUnauthenticated, "authentication required")
+		return
+	}
 
 	taskID, err := core_http_request.GetIntPathValue(r, "id")
 	if err != nil {
@@ -95,7 +104,7 @@ func (h *TasksHTTPHandler) PatchTask(rw http.ResponseWriter, r *http.Request) {
 
 	taskPatch := taskPatchFromRequest(request)
 
-	taskDomain, err := h.tasksService.PatchTask(ctx, taskID, taskPatch)
+	taskDomain, err := h.tasksService.PatchTask(ctx, taskID, userID, taskPatch)
 	if err != nil {
 		responseHandler.ErrorResponse(
 			err,

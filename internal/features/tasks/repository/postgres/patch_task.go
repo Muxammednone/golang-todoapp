@@ -13,6 +13,7 @@ import (
 func (r *TasksRepository) PatchTask(
 	ctx context.Context,
 	taskID int,
+	userID int,
 	task domain.Task,
 ) (domain.Task, error) {
 	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
@@ -26,7 +27,7 @@ func (r *TasksRepository) PatchTask(
 		completed=$3,
 		completed_at=$4,
 		version=version + 1
-	WHERE id=$5 AND version=$6
+	WHERE id=$5 AND version=$6 AND author_user_id=$7
 
 	RETURNING
 		id,
@@ -48,6 +49,7 @@ func (r *TasksRepository) PatchTask(
 		task.CompletedAt,
 		taskID,
 		task.Version,
+		userID,
 	)
 
 	var taskModel TaskModel
@@ -65,6 +67,9 @@ func (r *TasksRepository) PatchTask(
 
 	if err != nil {
 		if errors.Is(err, core_postgres_pool.ErrNoRows) {
+			if _, lookupErr := r.GetTask(ctx, taskID, userID); lookupErr != nil {
+				return domain.Task{}, lookupErr
+			}
 			return domain.Task{}, fmt.Errorf(
 				"task with id=`%d` concurrently accessed: %w",
 				taskID,

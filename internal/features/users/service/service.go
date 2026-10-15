@@ -11,6 +11,8 @@ type UsersService struct {
 }
 
 type UsersRepository interface {
+	CreateProfile(context.Context, int64, domain.User) (domain.User, error)
+	GetProfile(context.Context, int64) (domain.User, error)
 	CreateUser(
 		ctx context.Context,
 		user domain.User,

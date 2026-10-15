@@ -13,6 +13,7 @@ import (
 func (r *TasksRepository) GetTask(
 	ctx context.Context,
 	taskID int,
+	userID int,
 ) (domain.Task, error) {
 	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
 	defer cancel()
@@ -20,10 +21,10 @@ func (r *TasksRepository) GetTask(
 	query := `
 	SELECT id, version, title, description, completed, created_at, completed_at, author_user_id
 	FROM todoapp.tasks	
-	WHERE id=$1;
+	WHERE id=$1 AND author_user_id=$2;
 	`
 
-	row := r.pool.QueryRow(ctx, query, taskID)
+	row := r.pool.QueryRow(ctx, query, taskID, userID)
 
 	var taskModel TaskModel
 

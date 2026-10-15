@@ -10,16 +10,17 @@ import (
 func (r *TasksRepository) DeleteTask(
 	ctx context.Context,
 	taskID int,
+	userID int,
 ) error {
 	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
 	defer cancel()
 
 	query := `
 	DELETE FROM todoapp.tasks
-	WHERE id=$1;
+	WHERE id=$1 AND author_user_id=$2;
 	`
 
-	cmdTag, err := r.pool.Exec(ctx, query, taskID)
+	cmdTag, err := r.pool.Exec(ctx, query, taskID, userID)
 	if err != nil {
 		return fmt.Errorf("exec query: %w", err)
 	}

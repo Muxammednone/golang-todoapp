@@ -9,7 +9,7 @@ import (
 
 func (r *TasksRepository) GetTasks(
 	ctx context.Context,
-	userID *int,
+	userID int,
 	limit *int,
 	offset *int,
 ) ([]domain.Task, error) {
@@ -19,20 +19,13 @@ func (r *TasksRepository) GetTasks(
 	query := `
 	SELECT id, version, title, description, completed, created_at, completed_at, author_user_id
 	FROM todoapp.tasks
-	%s
+	WHERE author_user_id=$3
 	ORDER BY id ASC
 	LIMIT $1
 	OFFSET $2;
 	`
 
-	args := []any{limit, offset}
-
-	if userID != nil {
-		query = fmt.Sprintf(query, "WHERE author_user_id=$3")
-		args = append(args, userID)
-	} else {
-		query = fmt.Sprintf(query, "")
-	}
+	args := []any{limit, offset, userID}
 
 	rows, err := r.pool.Query(
 		ctx,
