@@ -34,6 +34,7 @@ func (h *HTTPResponseHandler) JSONResponse(
 	responseBody any,
 	statusConde int,
 ) {
+	h.rw.Header().Set("Content-Type", "application/json")
 	h.rw.WriteHeader(statusConde)
 
 	if err := json.NewEncoder(h.rw).Encode(responseBody); err != nil {
@@ -67,6 +68,15 @@ func (h *HTTPResponseHandler) ErrorResponse(err error, msg string) {
 	case errors.Is(err, core_errors.ErrConflict):
 		statusCode = http.StatusConflict
 		logFunc = h.log.Warn
+	case errors.Is(err, core_errors.ErrUnauthenticated):
+		statusCode = http.StatusUnauthorized
+		logFunc = h.log.Warn
+	case errors.Is(err, core_errors.ErrUnavailable):
+		statusCode = http.StatusServiceUnavailable
+		logFunc = h.log.Error
+	case errors.Is(err, core_errors.ErrDeadlineExceeded):
+		statusCode = http.StatusGatewayTimeout
+		logFunc = h.log.Error
 	default:
 		statusCode = http.StatusInternalServerError
 		logFunc = h.log.Error
@@ -99,8 +109,11 @@ func (h *HTTPResponseHandler) errorResponse(
 	err error,
 	msg string,
 ) {
-	h.rw.WriteHeader(statusCode)
 
+	if statusCode == http.StatusInternalServerError {
+		err = errors.New("internal server error")
+		msg = "internal server error"
+	}
 	response := NewErrorResponse(err.Error(), msg)
 
 	h.JSONResponse(

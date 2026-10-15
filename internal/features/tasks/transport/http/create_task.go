@@ -4,15 +4,16 @@ import (
 	"net/http"
 
 	"github.com/Muxammednone/golang-todoapp/internal/core/domain"
+	core_errors "github.com/Muxammednone/golang-todoapp/internal/core/errors"
 	core_logger "github.com/Muxammednone/golang-todoapp/internal/core/logger"
+	core_http_middleware "github.com/Muxammednone/golang-todoapp/internal/core/transport/http/middleware"
 	core_http_request "github.com/Muxammednone/golang-todoapp/internal/core/transport/http/request"
 	core_http_response "github.com/Muxammednone/golang-todoapp/internal/core/transport/http/response"
 )
 
 type CreateTaskRequest struct {
-	Title        string  `json:"title" validate:"required,min=1,max=100" example:"Домашка"`
-	Description  *string `json:"description" validate:"omitempty,min=1,max=1000" example:"Сделать до четверга домашнее задание по математике"`
-	AuthorUserID int     `json:"author_user_id" validate:"required" example:"2"`
+	Title       string  `json:"title" validate:"required,min=1,max=100" example:"Домашка"`
+	Description *string `json:"description" validate:"omitempty,min=1,max=1000" example:"Сделать до четверга домашнее задание по математике"`
 }
 
 type CreateTaskResponse TaskDTOResponse
@@ -26,13 +27,20 @@ type CreateTaskResponse TaskDTOResponse
 // @Param			request body CreateTaskRequest true "CreateTask тело запроса"
 // @Success 		201 {object} CreateTaskResponse "Успешно созданная задача"
 // @Failure 		400 {object} core_http_response.ErrorResponse "Bad request"
-// @Failure 		404 {object} core_http_response.ErrorResponse "Author not found"
+// @Failure 		404 {object} core_http_response.ErrorResponse "Create a profile via POST /me first"
 // @Failure 		500 {object} core_http_response.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Failure 401 {object} core_http_response.ErrorResponse "Invalid or expired JWT"
 // @Router 			/tasks [post]
 func (h *TasksHTTPHandler) CreateTask(rw http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := core_logger.FromContext(ctx)
 	responseHandler := core_http_response.NewHTTPResponseHandler(logger, rw)
+	userID, ok := core_http_middleware.ProfileUserIDFromContext(ctx)
+	if !ok {
+		responseHandler.ErrorResponse(core_errors.ErrUnauthenticated, "authentication required")
+		return
+	}
 
 	var request CreateTaskRequest
 	if err := core_http_request.DecodeAndValidateRequest(r, &request); err != nil {
@@ -46,7 +54,7 @@ func (h *TasksHTTPHandler) CreateTask(rw http.ResponseWriter, r *http.Request) {
 	taskDomain := domain.NewTaskUninitialized(
 		request.Title,
 		request.Description,
-		request.AuthorUserID,
+		userID,
 	)
 
 	taskDomain, err := h.tasksService.CreateTask(ctx, taskDomain)

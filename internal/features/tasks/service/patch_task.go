@@ -10,9 +10,10 @@ import (
 func (s *TasksService) PatchTask(
 	ctx context.Context,
 	taskID int,
+	userID int,
 	taskPatch domain.TaskPatch,
 ) (domain.Task, error) {
-	task, err := s.tasksRepository.GetTask(ctx, taskID)
+	task, err := s.tasksRepository.GetTask(ctx, taskID, userID)
 	if err != nil {
 		return domain.Task{}, fmt.Errorf("get task: %w", err)
 	}
@@ -21,7 +22,7 @@ func (s *TasksService) PatchTask(
 		return domain.Task{}, fmt.Errorf("apply task patch: %w", err)
 	}
 
-	patchedTask, err := s.tasksRepository.PatchTask(ctx, taskID, task)
+	patchedTask, err := s.tasksRepository.PatchTask(ctx, taskID, userID, task)
 
 	if err != nil {
 		return domain.Task{}, fmt.Errorf("patch task: %w", err)

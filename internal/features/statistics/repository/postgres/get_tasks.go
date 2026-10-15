@@ -11,7 +11,7 @@ import (
 
 func (r *StatisticsRepository) GetTasks(
 	ctx context.Context,
-	userID *int,
+	userID int,
 	from *time.Time,
 	to *time.Time,
 ) ([]domain.Task, error) {
@@ -25,13 +25,8 @@ func (r *StatisticsRepository) GetTasks(
 	FROM todoapp.tasks
 	`)
 
-	args := []any{}
-	conditions := []string{}
-
-	if userID != nil {
-		conditions = append(conditions, fmt.Sprintf("author_user_id=$%d", len(args)+1))
-		args = append(args, userID)
-	}
+	args := []any{userID}
+	conditions := []string{"author_user_id=$1"}
 
 	if from != nil {
 		conditions = append(conditions, fmt.Sprintf("created_at>=$%d", len(args)+1))

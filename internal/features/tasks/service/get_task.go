@@ -10,8 +10,9 @@ import (
 func (s *TasksService) GetTask(
 	ctx context.Context,
 	taskID int,
+	userID int,
 ) (domain.Task, error) {
-	task, err := s.tasksRepository.GetTask(ctx, taskID)
+	task, err := s.tasksRepository.GetTask(ctx, taskID, userID)
 	if err != nil {
 		return domain.Task{}, fmt.Errorf("get task from repository: %w", err)
 	}

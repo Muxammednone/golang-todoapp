@@ -17,21 +17,24 @@ type TasksRepository interface {
 	) (domain.Task, error)
 	GetTasks(
 		ctx context.Context,
-		userID *int,
+		userID int,
 		limit *int,
 		offset *int,
 	) ([]domain.Task, error)
 	GetTask(
 		ctx context.Context,
 		taskID int,
+		userID int,
 	) (domain.Task, error)
 	DeleteTask(
 		ctx context.Context,
 		taskID int,
+		userID int,
 	) error
 	PatchTask(
 		ctx context.Context,
 		taskID int,
+		userID int,
 		task domain.Task,
 	) (domain.Task, error)
 }

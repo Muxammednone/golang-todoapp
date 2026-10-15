@@ -1,0 +1,53 @@
+version: '3'
+
+dotenv: ['.env']
+
+env:
+  PROJECT_ROOT: '{{.TASKFILE_DIR}}'
+
+tasks:
+  run:
+    desc: Run TodoApp locally with settings from .env
+    env:
+      POSTGRES_HOST: '127.0.0.1'
+      LOGGER_FOLDER: '{{.TASKFILE_DIR}}/out/logs'
+      CGO_ENABLED: '0'
+    cmds:
+      - go run ./cmd/todoapp
+
+  build:
+    desc: Build all Go packages
+    cmds:
+      - go build ./...
+
+  swagger:
+    desc: Generate Swagger from Go annotations
+    cmds:
+      - go run github.com/swaggo/swag/cmd/swag@v1.16.6 init -g cmd/todoapp/main.go -o docs
+
+  db:up:
+    desc: Start PostgreSQL and expose it on localhost:5432
+    cmds:
+      - docker compose up -d todoapp-postgres port-forwarder
+
+  db:down:
+    desc: Stop PostgreSQL and its port forwarder, preserving data
+    cmds:
+      - docker compose stop port-forwarder todoapp-postgres
+
+  db:status:
+    desc: Show PostgreSQL and port forwarder status
+    cmds:
+      - docker compose ps todoapp-postgres port-forwarder
+
+  db:migrate:
+    desc: Apply pending database migrations
+    silent: true
+    cmds:
+      - >-
+        docker compose run --rm todoapp-postgres-migrate
+        -path /migrations
+        -database "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@todoapp-postgres:5432/${POSTGRES_DB}?sslmode=disable"
+        up
+
+

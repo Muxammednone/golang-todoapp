@@ -5,11 +5,13 @@ import (
 	"net/http"
 
 	"github.com/Muxammednone/golang-todoapp/internal/core/domain"
+	core_http_middleware "github.com/Muxammednone/golang-todoapp/internal/core/transport/http/middleware"
 	core_http_server "github.com/Muxammednone/golang-todoapp/internal/core/transport/http/server"
 )
 
 type TasksHTTPHandler struct {
 	tasksService TasksService
+	middleware   []core_http_middleware.Middleware
 }
 
 type TasksService interface {
@@ -19,59 +21,69 @@ type TasksService interface {
 	) (domain.Task, error)
 	GetTasks(
 		ctx context.Context,
-		userID *int,
+		userID int,
 		limit *int,
 		offset *int,
 	) ([]domain.Task, error)
 	GetTask(
 		ctx context.Context,
 		taskID int,
+		userID int,
 	) (domain.Task, error)
 	DeleteTask(
 		ctx context.Context,
 		taskID int,
+		userID int,
 	) error
 	PatchTask(
 		ctx context.Context,
 		taskID int,
+		userID int,
 		taskPatch domain.TaskPatch,
 	) (domain.Task, error)
 }
 
 func NewTasksHTTPHandler(
 	tasksService TasksService,
+	middleware ...core_http_middleware.Middleware,
 ) *TasksHTTPHandler {
 	return &TasksHTTPHandler{
 		tasksService: tasksService,
+		middleware:   middleware,
 	}
 }
 
 func (h *TasksHTTPHandler) Routes() []core_http_server.Route {
 	return []core_http_server.Route{
 		{
-			Method:  http.MethodPost,
-			Path:    "/tasks",
-			Handler: h.CreateTask,
+			Method:     http.MethodPost,
+			Path:       "/tasks",
+			Middleware: h.middleware,
+			Handler:    h.CreateTask,
 		},
 		{
-			Method:  http.MethodGet,
-			Path:    "/tasks",
-			Handler: h.GetTasks,
+			Method:     http.MethodGet,
+			Path:       "/tasks",
+			Middleware: h.middleware,
+			Handler:    h.GetTasks,
 		},
 		{
-			Method:  http.MethodGet,
-			Path:    "/tasks/{id}",
-			Handler: h.GetTask,
+			Method:     http.MethodGet,
+			Path:       "/tasks/{id}",
+			Middleware: h.middleware,
+			Handler:    h.GetTask,
 		},
 		{
-			Method:  http.MethodDelete,
-			Path:    "/tasks/{id}",
-			Handler: h.DeleteTask,
+			Method:     http.MethodDelete,
+			Path:       "/tasks/{id}",
+			Middleware: h.middleware,
+			Handler:    h.DeleteTask,
 		},
 		{
-			Method:  http.MethodPatch,
-			Path:    "/tasks/{id}",
-			Handler: h.PatchTask,
+			Method:     http.MethodPatch,
+			Path:       "/tasks/{id}",
+			Middleware: h.middleware,
+			Handler:    h.PatchTask,
 		},
 	}
 }

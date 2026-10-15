@@ -10,7 +10,7 @@ import (
 
 func (s *TasksService) GetTasks(
 	ctx context.Context,
-	userID *int,
+	userID int,
 	limit *int,
 	offset *int,
 ) ([]domain.Task, error) {
